@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Watches the CPU and GPU temperatures of a Raspberry Pi. A similar idea could work on other systems, but this presumes
+# the existence of the `vcgencmd` command and that there is only one thermal zone to monitor.
+
+invocation="$0"
+
+if [ -z "$1" ]
+then
+	watch --no-title --interval 0.5 "${invocation} 1"
+	exit 0
+fi
+
+gpu_temp=$(vcgencmd measure_temp | grep  -o -E '[[:digit:]]+(\.[[:digit:]]+)?')
+
+# CPU temp is returned as an integer number of millicelsius.
+# We use bc to turn this into a fractional number of celsius.
+cpu_temp_mc=$(</sys/class/thermal/thermal_zone0/temp)
+cpu_temp=$(bc -l <<< "scale=1; $cpu_temp_mc/1000")
+
+printf "CPU Temp: %s'C\n" "$cpu_temp"
+printf "GPU Temp: %s'C\n" "$gpu_temp"
